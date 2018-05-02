@@ -1,0 +1,6 @@
+.envrc
+node_modules
+.idea/
+diffs/
+figma-to-react
+yarn-error.log
