@@ -62,6 +62,8 @@ const Rectangle = ({node}: { node: Figma.Rectangle }) => {
         style.backgroundColor = bgColor
     }
 
+    style.borderRadius = `${node.cornerRadius}px`
+
     return (
         <div style={style}/>
     )

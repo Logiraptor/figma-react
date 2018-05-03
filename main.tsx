@@ -181,19 +181,29 @@ async function renderNode(chromeless: Chromeless<any>, node: Figma.Node) {
     </style>
     `
     fs.writeFileSync('/tmp/static-figma-react.html', output)
-    if ('absoluteBoundingBox' in node) {
-        await chromeless.setViewport({
-            height: node.absoluteBoundingBox.height,
-            width: node.absoluteBoundingBox.width,
-        })
-    } else {
-        console.log(`No bounding box in node type ${node.type}, rendering may be inaccurate`)
-    }
+    const size = calculateNodeSize(node)
+    await chromeless.setViewport({
+        width: size.x,
+        height: size.y,
+    })
     await chromeless.goto('file://' + '/tmp/static-figma-react.html')
 
     const screenshot = await chromeless.screenshot()
     console.log(screenshot)
     return screenshot
+}
+
+function calculateNodeSize(node: Figma.Node): Figma.Vector2D {
+    const size: Figma.Vector2D = {x: 0, y: 0}
+    if ('absoluteBoundingBox' in node) {
+        size.x += node.absoluteBoundingBox.width;
+        size.y += node.absoluteBoundingBox.height;
+    }
+    if ('strokeWeight' in node && 'strokes' in node && node.strokes.length > 0) {
+        size.x += node.strokeWeight * 2;
+        size.y += node.strokeWeight * 2;
+    }
+    return size;
 }
 
 main().catch(err => console.log(err))
