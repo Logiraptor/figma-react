@@ -1,9 +1,31 @@
+import {CSSProperties} from 'react'
 import * as React from 'react'
 import {Figma} from './figma'
 import PaintType = Figma.PaintType
 
 interface Props {
     node: Figma.Node
+}
+
+
+function getColorFromList(fills: Figma.Paint[]) {
+    if (fills.length > 0) {
+        return getColor(fills[fills.length - 1])
+    }
+    return null
+}
+
+function getColor(paint: Figma.Paint): string {
+    switch (paint.type) {
+        case PaintType.SOLID:
+            return colorString(paint.color)
+        default:
+            return '#00ff00'
+    }
+}
+
+function colorString(color: Figma.Color) {
+    return `rgba(${Math.round(color.r * 255)}, ${Math.round(color.g * 255)}, ${Math.round(color.b * 255)}, ${color.a})`
 }
 
 export class FigmaReact extends React.Component<Props> {
@@ -15,12 +37,7 @@ export class FigmaReact extends React.Component<Props> {
                     {node.children.map(child => <FigmaReact node={child}/>)}
                 </>
             case 'RECTANGLE':
-                return <div style={{
-                    height: node.size.y,
-                    width: node.size.x,
-                    border: `${node.strokeWeight}px solid ${this.getColorFromList(node.strokes)}`,
-                    backgroundColor: this.getColorFromList(node.fills)
-                }}/>
+                return <Rectangle node={node} />
             case 'TEXT':
                 return <span>{node.characters}</span>
             default:
@@ -28,24 +45,24 @@ export class FigmaReact extends React.Component<Props> {
                 return <span/>
         }
     }
+}
 
-    getColorFromList(fills: Figma.Paint[]) {
-        if (fills.length > 0) {
-            return this.getColor(fills[fills.length - 1])
-        }
-        return '#000000'
+const Rectangle = ({node}: { node: Figma.Rectangle }) => {
+    const style: CSSProperties = {}
+    style.height = node.size.y;
+    style.width = node.size.x;
+
+    const borderColor = getColorFromList(node.strokes)
+    if (borderColor) {
+        style.border = `${node.strokeWeight}px solid ${getColorFromList(node.strokes)}`
     }
 
-    private getColor(paint: Figma.Paint): string {
-        switch (paint.type) {
-            case PaintType.SOLID:
-                return this.colorString(paint.color)
-            default:
-                return '#00ff00'
-        }
+    const bgColor = getColorFromList(node.fills)
+    if (bgColor) {
+        style.backgroundColor = bgColor
     }
 
-    private colorString(color: Figma.Color) {
-        return `rgba(${Math.round(color.r*255)}, ${Math.round(color.g*255)}, ${Math.round(color.b*255)}, ${color.a})`;
-    }
+    return (
+        <div style={style}/>
+    )
 }
